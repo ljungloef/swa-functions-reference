@@ -1,40 +1,33 @@
-using System;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 
-namespace AzNan.DeviceSimulator
+namespace Functions
 {
-    public class NewTemperatureReading
+    public class DeviceSimulator
     {
-        public string DeviceId { get; set; }
-        public DateTimeOffset Timestamp { get; set; }
-        public double Temperature { get; set; }
-    }
+        private readonly ILogger _logger;
 
-    public static class DeviceSimulator
-    {
-        [Function("DeviceSimulator")]
-        [QueueOutput("temperatures", Connection = "AzureWebJobsStorage")]
-        public static NewTemperatureReading Run([TimerTrigger("*/30 * * * * *")] MyInfo myTimer, FunctionContext context)
+        public DeviceSimulator(ILoggerFactory loggerFactory)
         {
-            var logger = context.GetLogger("DeviceSimulator");
-            logger.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
+            _logger = loggerFactory.CreateLogger<DeviceSimulator>();
+        }
+
+        [Function("DeviceSimulator")]
+        [QueueOutput("temperature-reports", Connection = "AzureWebJobsStorage")]
+        public NewTemperatureReading Run([TimerTrigger("*/30 * * * * *")] MyInfo myTimer)
+        {
+            _logger.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
 
             var rng = new Random();
-
-            var reading = new NewTemperatureReading {
-                DeviceId = "1",
-                Timestamp = DateTimeOffset.UtcNow,
-                Temperature = rng.NextDouble() * 100
-            };
-
+            var reading = new NewTemperatureReading("1", DateTimeOffset.UtcNow, rng.NextDouble() * 100);
             return reading;
         }
     }
 
+    public record NewTemperatureReading(string DeviceId, DateTimeOffset Timestamp, double Temperature);
+
     public class MyInfo
     {
-
         public bool IsPastDue { get; set; }
     }
 }

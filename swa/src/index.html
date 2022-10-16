@@ -18,8 +18,8 @@
 <script>
   (async function() {
 
-    let content = await fetch("api/Api");
-    let message = content.status < 300 ? JSON.stringify(await content.json()) : `Error=${content.status}, ${content.statusText}`;
+    let content = await fetch("api/TemperatureApi");
+    let message = content.status < 300 ? (await content.text()) : `Error=${content.status}, ${content.statusText}`;
 
     document.querySelector("#temperature").innerHTML = message;
 
